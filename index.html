@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empathy Map Automation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI Light', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #dedfdd;
+        }
+
+        #header {
+            background-color: #5D576B; /* Indigo */
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        #name-input {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: none;
+        }
+
+        #question-container {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 0;
+            margin: 0;
+        }
+
+        #question {
+            background-color: #ffffff; /* White */
+            padding: 20px;
+            border-radius: 0; /* No border radius */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
+        }
+
+        #video-container {
+            background-color: #dedfdd; /* White */
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            border-radius: 10px; /* Rounded edges */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
+        }
+
+        #video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px; /* Rounded edges */
+        }
+
+        #buttons-container {
+            background-color: #dedfdd; /* White */
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px; /* Rounded edges */
+            display: flex;
+            justify-content: center;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0); /* Shadow effect */
+        }
+
+        .record-button {
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 10px; /* Rounded edges */
+            transition: background-color 0.3s ease;
+            font-weight: bold;
+            font-family: 'Segoe UI Light', sans-serif;
+            margin-right: 10px; /* Add some space between buttons */
+        }
+
+        .record-button.start {
+            background-color: #d64c4c; /* Green */
+        }
+
+        .record-button.stop {
+            background-color: #5D576B; /* Red */
+        }
+
+        .record-button:hover {
+            background-color: #333; /* Dark gray */
+        }
+
+        #response-container {
+            background-color: #dedfdd; /* Light gray */
+            padding: 20px;
+            border-radius: 0; /* No border radius */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0); /* Shadow effect */
+        }
+
+        #response {
+            background-color: #ffffff; /* White */
+            padding: 20px;
+            border-radius: 0; /* No border radius */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
+        }
+
+        #empathy-map-container {
+            background-color: #5D576B; /* White */
+            padding: 20px;
+            border-radius: 0; /* No border radius */
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
+        }
+
+        .empathy-section {
+            background-color: rgba(255, 255, 255, 0.9); /* White */
+            padding: 20px;
+            border-radius: 0; /* No border radius */
+            border: 2px dotted rgba(0, 0, 0, 0.5);
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
+        }
+
+        .empathy-content {
+            background-color: rgba(255, 255, 255, 0); /* White */
+            padding: 20px;
+            border-radius: 0; /* No border radius */
+            overflow: auto; /* Enable scrolling if content exceeds container height */
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Empathy Map Automation</h1>
+    </div>
+
+    <input type="text" id="name-input" placeholder="Your Name">
+
+    <div id="question-container">
+        <div id="question">Question will appear here</div>
+    </div>
+
+    <div id="video-container">
+        <video id="video" autoplay></video>
+    </div>
+
+    <div id="buttons-container">
+        <button id="start" class="record-button start">Start Recording</button>
+        <button id="stop" class="record-button stop">Stop Recording</button>
+    </div>
+
+    <div id="response-container">
+        <div id="response">Response will appear here</div>
+    </div>
+
+    <div id="empathy-map-container">
+        <div class="empathy-section">
+            <div>Says:</div>
+            <div class="empathy-content" id="says"></div>
+        </div>
+        <div class="empathy-section">
+            <div>Thinks:</div>
+            <div class="empathy-content" id="thinks"></div>
+        </div>
+        <div class="empathy-section">
+            <div>Does:</div>
+            <div class="empathy-content" id="does"></div>
+        </div>
+        <div class="empathy-section">
+            <div>Feels:</div>
+            <div class="empathy-content" id="feels"></div>
+        </div>
+    </div>
+
+    <script>
+        var video = document.querySelector("#video");
+        var mediaRecorder;
+        var recordedBlobs;
+        var questionIndex = 0;
+        var questions = ["Question 1", "Question 2", "Question 3"]; // Add your questions here
+
+        document.getElementById("question").innerText = questions[questionIndex];
+
+        function startCamera() {
+            if (navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                    .then(function (stream) {
+                        video.srcObject = stream;
+                        video.muted = true;
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.onstop = (event) => {
+                            let blob = new Blob(recordedBlobs, {type: 'video/webm'});
+                            let formData = new FormData();
+                            formData.append('file', blob, `question${questionIndex + 1}.webm`);
+                            // Here you should replace '/upload' with the URL where you want to upload the video
+                            fetch('/upload', {method: 'POST', body: formData})
+                                .then(response => response.text())
+                                .then(data => console.log(data))
+                                .catch(error => console.error('Error:', error));
+                            document.getElementById("response").innerText += `\nResponse to ${questions[questionIndex]}`;
+                            document.getElementById("says").innerText += `\nSays: Response to ${questions[questionIndex]}`;
+                            document.getElementById("thinks").innerText += `\nThinks: Response to ${questions[questionIndex]}`;
+                            document.getElementById("does").innerText += `\nDoes: Response to ${questions[questionIndex]}`;
+                            document.getElementById("feels").innerText += `\nFeels: Response to ${questions[questionIndex]}`;
+                            questionIndex++;
+                            if (questionIndex < questions.length) {
+                                document.getElementById("question").innerText = questions[questionIndex];
+                                startCamera();
+                            } else {
+                                document.getElementById("question").innerText = "All questions answered";
+                            }
+                        };
+                        mediaRecorder.ondataavailable = handleDataAvailable;
+                    })
+                    .catch(function (error) {
+                        console.log("Something went wrong!");
+                    });
+            }
+        }
+
+        function handleDataAvailable(event) {
+            if (event.data && event.data.size > 0) {
+                recordedBlobs.push(event.data);
+            }
+        }
+
+        document.querySelector("#start").addEventListener("click", function() {
+            recordedBlobs = [];
+            mediaRecorder.start();
+        });
+
+        document.querySelector("#stop").addEventListener("click", function() {
+            mediaRecorder.stop();
+            video.srcObject.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+        });
+
+        startCamera();
+    </script>
+</body>
+</html>
